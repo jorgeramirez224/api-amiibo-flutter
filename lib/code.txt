@@ -1,0 +1,87 @@
+ body: Container(
+        margin: const EdgeInsets.all(8.0),
+        width: 225,
+        height: 225,
+        child: const Card(
+          color: Colors.red,
+          shadowColor: Colors.black,
+          elevation: 1.0,
+        ),
+      ),
+
+body: Container(
+        margin: const EdgeInsets.all(8.0),
+        width: 225,
+        height: 225,
+        child: Card(
+          color: Colors.red,
+          shadowColor: Colors.black,
+          shape: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Colors.black, width: 7),
+          ),
+        ),
+      ),
+
+import 'package:apis/controllers/amiibo_controller.dart';
+import 'package:apis/pages/search_amiibo.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class HomePage extends StatelessWidget {
+  HomePage({Key? key}) : super(key: key);
+  final amiiboController = Get.find<AmiiboController>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Amiibos'),
+        actions: [
+          IconButton(
+            tooltip: 'Buscar',
+            onPressed: () {
+              showSearch(context: context, delegate: SearchAmiibo());
+            }, 
+            icon: const Icon(Icons.search),
+            ),
+        ],
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: GetBuilder<AmiiboController>(builder: (amiiboController) {
+        return ListView.builder(
+            itemCount: amiiboController.amiibos.length,
+            itemBuilder: (context, i) {
+              final amiibo = amiiboController.amiibos[i];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: NetworkImage(amiibo.image!),
+                ),
+                title: Text(amiibo.name!),
+                subtitle: Text(amiibo.type!),
+              );
+            });
+      }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          amiiboController.obtenerAmiibos();
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class AmiiboController extends GetxController {
+  final peticionesApi = Get.find<PeticionesApi>();
+  List<AmiiboModel> amiibos = [];
+
+  Future<void> obtenerAmiibos() async {
+    final response = await peticionesApi.httpGet();
+    final listaAmiibos = response.body['amiibo'];
+    final listaAmiibosModel = List<AmiiboModel>.from(
+        listaAmiibos.map((amiibo) => AmiiboModel.fromJsonMap(amiibo)));
+    amiibos.addAll(listaAmiibosModel);
+    update();
+  }
+}
